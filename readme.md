@@ -3,7 +3,7 @@ typora-root-url: src
 ---
 滑动效果  
 
-![滑动](https://github.com/fengbinmov/EnhanceScrollView/tree/master/src/滑动.gif)
+![滑动](src/滑动.gif)
 
 点击效果（事件的响应在目标Item滚动到指定位置后调用,如果直接点击已处于目标位置的Item将会按照按钮响应规则触发）
 
