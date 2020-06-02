@@ -18,8 +18,8 @@ public class EnhanceScrollView : MonoBehaviour {
 	public AnimationCurve positionYOff;
 	public AnimationCurve localScaleXYVaule;
 	public bool b_Active = true;
+	public bool b_ToIndex = true;
 	public bool b_CanGetTo{get{return b_Active && !bIsRolling;}}
-
 
 	private ItemDrag[] a_itemDrag = new ItemDrag[]{};
 	public bool b_IsDoubCount { get { return a_itemDrag.Length % 2 == 0; } }
@@ -27,9 +27,9 @@ public class EnhanceScrollView : MonoBehaviour {
 	public float f_ItemWidth = 100;
 	public float f_ItemSpace = 10;
 
-	public float f_process = 0f;//pri
-	public float f_targetProcess;//pri
-	public float f_proMin,f_proMax;
+	private float f_process = 0f;//pri
+	private float f_targetProcess;//pri
+	private float f_proMin,f_proMax;
 
 	public Action onClick;
 
@@ -37,23 +37,43 @@ public class EnhanceScrollView : MonoBehaviour {
 	public float f_ProMax { get { return f_proMax; } }
 
 	public float f_Rollspeed = 1;
+	public float f_Dragspeed = 1;
 
 	private int iOffDir = 0;	//卷轴偏移方向（将自动归零，回归平衡状态)
 
 	public bool bIsRolling;	//当前是否为滚动状态
+	
+	[SerializeField]
+	private float _value = 0;
+	public float Value{
+		get{return _value;}
+		set{
+			
+			_value = value < 0 ? i_ItemCount + value : value;
+			_value = _value % i_ItemCount;
 
-	public void ToIndex(int _value, Action action = null) {
+			lastProcess = f_targetProcess = f_process = f_proMin + _value * f_proMin * 2;
+			SetPositions(a_itemDrag);
+		}
+	}
+
+
+	//自动翻动指定的矢量值的页数
+	//在自动翻到指定的页数后，调用该Item按钮的时间
+	public void AutoToPageTurn(int _turnDirection, Action action = null) {
 
 		if (!b_Active) return;
 
-		iOffDir = _value;
+		iOffDir = _turnDirection;
 		onClick = action;
 	}
-	public void ToAddProcess(float _value)
+
+	//
+	public void ToAddProcess(float valueT)
 	{
 		if (!b_Active) return;
 
-		f_targetProcess += _value;
+		f_targetProcess += valueT;
 		
 		if (f_targetProcess > f_proMax * 2)
 		{
@@ -79,14 +99,9 @@ public class EnhanceScrollView : MonoBehaviour {
 		}
 	}
 
-
-	void Start () {
-
-		Input.multiTouchEnabled = false;
+	void Awake () {
 
 		InitData();
-
-		UpdatePosition();
 	}
 
 	void LateUpdate()
@@ -96,11 +111,13 @@ public class EnhanceScrollView : MonoBehaviour {
 
 			if (Input.GetKey(KeyCode.LeftArrow))
 			{
-				iOffDir = -1;
+				// iOffDir = -1;
+				Value -= Time.deltaTime;
 			}
 			if (Input.GetKey(KeyCode.RightArrow))
 			{
-				iOffDir = 1;
+				// iOffDir = 1;
+				Value += Time.deltaTime;
 			}
 		}
 		if(b_Active) UpdatePosition();
@@ -165,26 +182,34 @@ public class EnhanceScrollView : MonoBehaviour {
 		}
 
 		if(f_process != lastProcess){
-
 			bIsRolling = true;
-        	float contextWidth = (f_ItemWidth + f_ItemSpace) * i_ItemCount;
-			float posXT;
-			float localsXT;
-			for (int i = 0; i < i_ItemCount; i++)
-			{
-				posXT = (a_itemDrag[i].PosX + f_process + 1f) % 2f - 1f;
-				localsXT = localScaleXYVaule.Evaluate(posXT);
-
-				a_itemDrag[i].SetStatus(posXT,
-				new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), positionYOff.Evaluate(posXT)),
-				new Vector2(localsXT, localsXT));
-			}
+			_value = ((1 - (f_process - f_proMin) / 2f) * i_ItemCount) % i_ItemCount;
+			SetPositions(a_itemDrag);
 		}
 
 		lastProcess = f_process;
 	}
 
+	void SetPositions(ItemDrag[] a_itemDragT){
+
+		float contextWidth = (f_ItemWidth + f_ItemSpace) * i_ItemCount/2f;
+		float posXT;
+		float localsXT;
+		for (int i = 0; i < i_ItemCount; i++)
+		{
+			float PosX = ((float)i / (i_ItemCount)) * 2f - 1f;
+			posXT = (PosX + f_process + 1f) % 2f - 1f;
+			localsXT = localScaleXYVaule.Evaluate(posXT);
+
+			a_itemDragT[i].SetStatus(posXT,
+			new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), positionYOff.Evaluate(posXT)),
+			new Vector2(localsXT, localsXT));
+		}
+	}
+
 	void InitData() {
+
+		Input.multiTouchEnabled = false;
 
 		i_ItemCount = context.childCount;
 		a_itemDrag = new ItemDrag[i_ItemCount];
@@ -199,6 +224,8 @@ public class EnhanceScrollView : MonoBehaviour {
 		f_proMin = 1f / i_ItemCount;
 		f_proMax = 2 + f_proMin;
 		f_targetProcess = f_process = f_proMin;
+
+		SetPositions(a_itemDrag);
 	}
 
 	public void OnClickLeft() {
@@ -226,9 +253,10 @@ public class EnhanceScrollView : MonoBehaviour {
 	}
 
 	#if UNITY_EDITOR
+	
     private void OnValidate() {
 
-		if(UnityEditor.EditorApplication.isPlaying) return;
+		// if(UnityEditor.EditorApplication.isPlaying) return;
 
 		i_ItemCount = context.childCount;
 		ItemDrag[] a_itemDragT = new ItemDrag[i_ItemCount];
@@ -240,33 +268,46 @@ public class EnhanceScrollView : MonoBehaviour {
 
 		f_proMin = 1f / i_ItemCount;
 		f_proMax = 2 + f_proMin;
-		f_targetProcess = f_process = f_proMin;
 
-        float contextWidth = (f_ItemWidth + f_ItemSpace) * i_ItemCount;
-		float posXT;
-		float localsXT;
-		for (int i = 0; i < i_ItemCount; i++)
-		{
-			float PosX = ((float)i / (i_ItemCount)) * 2f - 1f;
-			posXT = (PosX + f_process + 1f) % 2f - 1f;
-			localsXT = localScaleXYVaule.Evaluate(posXT);
+		_value = _value < 0 ? i_ItemCount + _value : _value;
+		_value = _value % i_ItemCount;
+		lastProcess = f_targetProcess = f_process = f_proMin + _value * f_proMin * 2;
 
-			a_itemDragT[i].SetStatus(posXT,
-			new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), positionYOff.Evaluate(posXT)),
-			new Vector2(localsXT, localsXT));
-		}
+        SetPositions(a_itemDragT);
     }
 
+	private void OnDrawGizmos() {
+
+		i_ItemCount = context.childCount;
+		ItemDrag[] a_itemDragT = new ItemDrag[i_ItemCount];
+		
+		for (int i = 0; i < i_ItemCount; i++)
+		{
+			a_itemDragT[i] = context.GetChild(i).GetComponent<ItemDrag>();
+		}
+		Gizmos.color = Color.blue;
+		for (int i = 0; i < i_ItemCount; i++)
+		{
+			Gizmos.DrawWireSphere(a_itemDragT[i].transform.position,10);
+
+			Vector3 l = a_itemDragT[i].transform.position + new Vector3(f_ItemWidth/2f,0,0);
+			Vector3 r = a_itemDragT[i].transform.position + new Vector3(f_ItemWidth/2f + f_ItemSpace,0,0);
+			Gizmos.DrawLine(l,r);
+		}
+		
+		Gizmos.color = Color.red;
+		for (int i = 0; i < i_ItemCount; i++)
+		{
+			Gizmos.DrawWireCube( a_itemDragT[i].transform.position,new Vector3(f_ItemWidth,f_ItemWidth,0));
+		}
+
+	}
 	#endif
+
 
 	//Test Event
 	public void OnClick(int i){
 		
         Debug.Log("OnClickItem --result["+i+"]");
-	}
-
-	private void OnDrawGizmos() {
-
-		
 	}
 }

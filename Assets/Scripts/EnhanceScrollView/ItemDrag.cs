@@ -39,29 +39,34 @@ public class ItemDrag : Button
     {
         if(!b_CanClick || !scrollView.b_CanGetTo) return;
 
-        float f_value =0;
-        int value = 0;
+        if(scrollView.b_ToIndex){
+            float f_value =0;
+            int value = 0;
 
-        if (scrollView.b_IsDoubCount)
-        {
-            f_value = (f_processX + scrollView.f_ProMin) / (scrollView.f_ProMin * 2);
-        }
-        else {
-            f_value = f_processX / (scrollView.f_ProMin * 2);
-        }
-        value = Mathf.RoundToInt(f_value);
-
-        if (scrollView.b_IsDoubCount) {
-            if (value == 0)
+            if (scrollView.b_IsDoubCount)
             {
-                if (f_value > 0)
+                f_value = (f_processX + scrollView.f_ProMin) / (scrollView.f_ProMin * 2);
+            }
+            else {
+                f_value = f_processX / (scrollView.f_ProMin * 2);
+            }
+            value = Mathf.RoundToInt(f_value);
+
+            if (scrollView.b_IsDoubCount) {
+                if (value == 0)
                 {
-                    value += 1;
+                    if (f_value > 0)
+                    {
+                        value += 1;
+                    }
                 }
             }
-        }
 
-        scrollView.ToIndex(value, () => { base.OnPointerClick(eventData); });
+            scrollView.AutoToPageTurn(value, () => { base.OnPointerClick(eventData); });
+        }
+        else{
+            base.OnPointerClick(eventData);
+        }
     }
 
     private Vector2 v2_StartPosition;
@@ -72,7 +77,12 @@ public class ItemDrag : Button
     private void OnDraging()
     {
         v2_StartPosition = Input.mousePosition;
-        float processAdd = (v2_StartPosition.x - v2_EndPosition.x) / Screen.width * scrollView.f_ProMax;
+
+        if(v2_StartPosition.x > Screen.width)
+            v2_StartPosition.x = Screen.width;
+        if(v2_StartPosition.x < 0)
+            v2_StartPosition.x = 0;
+        float processAdd = (v2_StartPosition.x - v2_EndPosition.x) * scrollView.f_Dragspeed / (scrollView.f_ItemWidth + scrollView.f_ItemSpace) * scrollView.f_ProMin * 2f;
         float dis = Mathf.Abs((v2_StartPosition.x - v2_EndPosition.x));
 
         if (dis >= scrollView.f_ProMax && b_CanClick) {

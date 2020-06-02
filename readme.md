@@ -36,7 +36,9 @@ Item 宽度与间距调整
 
 ![奇偶处理效果](src/奇偶处理效果.gif)
 
+Item宽度显示Item之间的间隔大小显示
 
+![提示](E:\C07_UnityCode\Test_Projects\EnhanceScrollView\src\提示.gif)
 
 
 
