@@ -110,5 +110,9 @@ public class ItemDrag : Button
         v2_EndPosition = v2_StartPosition = Input.mousePosition;
         InvokeRepeating("OnDraging", 0, Time.deltaTime);
     }
-
+	
+    protected override void OnDisable() {
+        base.OnDisable();
+        CancelInvoke();
+    }
 }

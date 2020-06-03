@@ -207,7 +207,7 @@ public class EnhanceScrollView : MonoBehaviour {
 		}
 	}
 
-	void InitData() {
+	public void InitData() {
 
 		Input.multiTouchEnabled = false;
 

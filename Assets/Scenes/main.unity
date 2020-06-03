@@ -652,10 +652,6 @@ Prefab:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 1080304024406530, guid: 871a4bf912b6402488c8a407032e6a0c, type: 2}
-      propertyPath: m_Name
-      value: EnhanceScrollView
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 871a4bf912b6402488c8a407032e6a0c, type: 2}
   m_IsPrefabParent: 0
