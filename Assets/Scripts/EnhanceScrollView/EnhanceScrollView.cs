@@ -1,4 +1,4 @@
-﻿/*迭代版本：7.3
+﻿/*迭代版本：7.4
 	开发者:彬 
 	脚本解释：卷轴控件的核心控制器，
 	通过XOff调整 a_itemDrag 的位置;
@@ -6,9 +6,7 @@
 	通过XYOff 调整 a_itemDrag在x&y轴上的缩放大小;
 	通过autoDir调整 a_itemDrag 在整体卷轴中的内容进度，以内容步进的形式控制内容进度
 */
-using System;
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 public class EnhanceScrollView : MonoBehaviour {
@@ -31,7 +29,8 @@ public class EnhanceScrollView : MonoBehaviour {
 	private float f_targetProcess;//pri
 	private float f_proMin,f_proMax;
 
-	public Action onClick;
+	public delegate void TurnCallBack();
+	public TurnCallBack onClick;
 
 	public float f_ProMin { get { return f_proMin; } }
 	public float f_ProMax { get { return f_proMax; } }
@@ -60,7 +59,7 @@ public class EnhanceScrollView : MonoBehaviour {
 
 	//自动翻动指定的矢量值的页数
 	//在自动翻到指定的页数后，调用该Item按钮的时间
-	public void AutoToPageTurn(int _turnDirection, Action action = null) {
+	public void AutoToPageTurn(int _turnDirection, TurnCallBack action = null) {
 
 		if (!b_Active) return;
 
@@ -111,13 +110,11 @@ public class EnhanceScrollView : MonoBehaviour {
 
 			if (Input.GetKey(KeyCode.LeftArrow))
 			{
-				// iOffDir = -1;
-				Value -= Time.deltaTime;
+				iOffDir = -1;
 			}
 			if (Input.GetKey(KeyCode.RightArrow))
 			{
-				// iOffDir = 1;
-				Value += Time.deltaTime;
+				iOffDir = 1;
 			}
 		}
 		if(b_Active) UpdatePosition();
@@ -126,59 +123,57 @@ public class EnhanceScrollView : MonoBehaviour {
 	float lastProcess;
 	void UpdatePosition() {
 		
+		if (iOffDir != 0)
+		{
+			if (iOffDir > 0)
+			{
+				iOffDir -= 1;
+				NextRightItem();
+			}
+			else
+			{
+				iOffDir += 1;
+				NextLeftItem();
+			}
+		}
+		else{
+			
+			bIsRolling = false;
+			if (onClick != null) {
+				TurnCallBack t = onClick;
+				onClick = null;
+				t();
+			}
+		}
 		if (f_process != f_targetProcess)
 		{
 			float speedT = Time.deltaTime * f_Rollspeed;
 
 			if (f_process > f_targetProcess)
 			{
-				if ((f_process - Time.deltaTime * f_Rollspeed) > f_targetProcess)
-					f_process -= Time.deltaTime * f_Rollspeed;
+				if ((f_process - speedT) > f_targetProcess)
+					f_process -= speedT;
 				else
 					f_process = f_targetProcess;
 			}
 			else
 			{
-				if ((f_process + Time.deltaTime * f_Rollspeed) < f_targetProcess)
-					f_process += Time.deltaTime * f_Rollspeed;
+				if ((f_process + speedT) < f_targetProcess)
+					f_process += speedT;
 				else
 					f_process = f_targetProcess;
 			}
-		}
-		else
-		{
-			if (iOffDir != 0)
+			
+			if (f_process > f_proMax)
 			{
-				if (iOffDir > 0)
-				{
-					iOffDir -= 1;
-					NextRightItem();
-				}
-				else
-				{
-					iOffDir += 1;
-					NextLeftItem();
-				}
+				f_process = f_proMin;
+				f_targetProcess = f_targetProcess - f_proMax + f_proMin;
 			}
-			else{
-				
-				bIsRolling = false;
-				if (onClick != null) {
-					Action t = onClick;
-					onClick = null;
-					t();
-				}
+			if (f_process < f_proMin)
+			{
+				f_process = f_proMax;
+				f_targetProcess = f_proMax;
 			}
-		}
-		if (f_process > f_proMax)
-		{
-			f_process = f_proMin;
-			f_targetProcess = f_targetProcess - f_proMax + f_proMin;
-		}
-		if (f_process < f_proMin)
-		{
-			f_process = f_proMax;
-			f_targetProcess = f_proMax;
 		}
 
 		if(f_process != lastProcess){
@@ -208,8 +203,6 @@ public class EnhanceScrollView : MonoBehaviour {
 	}
 
 	public void InitData() {
-
-		Input.multiTouchEnabled = false;
 
 		i_ItemCount = context.childCount;
 		a_itemDrag = new ItemDrag[i_ItemCount];
@@ -256,7 +249,7 @@ public class EnhanceScrollView : MonoBehaviour {
 	
     private void OnValidate() {
 
-		// if(UnityEditor.EditorApplication.isPlaying) return;
+		if(UnityEditor.EditorApplication.isPlaying) return;
 
 		i_ItemCount = context.childCount;
 		ItemDrag[] a_itemDragT = new ItemDrag[i_ItemCount];
@@ -300,10 +293,12 @@ public class EnhanceScrollView : MonoBehaviour {
 		{
 			Gizmos.DrawWireCube( a_itemDragT[i].transform.position,new Vector3(f_ItemWidth,f_ItemWidth,0));
 		}
-
+		if(i_ItemCount % 2 == 0)
+			Gizmos.DrawWireSphere(context.transform.position - new Vector3((f_ItemWidth + f_ItemSpace)/2,0,0),f_ItemWidth/2);
+		else
+			Gizmos.DrawWireSphere(context.transform.position,f_ItemWidth/2);
 	}
 	#endif
-
 
 	//Test Event
 	public void OnClick(int i){

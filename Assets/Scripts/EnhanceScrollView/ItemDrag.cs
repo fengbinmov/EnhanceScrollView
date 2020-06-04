@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
@@ -52,15 +50,15 @@ public class ItemDrag : Button
             }
             value = Mathf.RoundToInt(f_value);
 
-            if (scrollView.b_IsDoubCount) {
-                if (value == 0)
-                {
-                    if (f_value > 0)
-                    {
-                        value += 1;
-                    }
-                }
-            }
+            // if (scrollView.b_IsDoubCount) {
+            //     if (value == 0)
+            //     {
+            //         if (f_value > 0)
+            //         {
+            //             value += 1;
+            //         }
+            //     }
+            // }
 
             scrollView.AutoToPageTurn(value, () => { base.OnPointerClick(eventData); });
         }
