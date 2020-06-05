@@ -6,6 +6,8 @@
 	通过XYOff 调整 a_itemDrag在x&y轴上的缩放大小;
 	通过autoDir调整 a_itemDrag 在整体卷轴中的内容进度，以内容步进的形式控制内容进度
 */
+using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 using UnityEngine;
 
@@ -30,7 +32,7 @@ public class EnhanceScrollView : MonoBehaviour {
 	private float f_proMin,f_proMax;
 
 	public delegate void TurnCallBack();
-	public TurnCallBack onClick;
+	public delegate void ChangeCallBack(float v);
 
 	public float f_ProMin { get { return f_proMin; } }
 	public float f_ProMax { get { return f_proMax; } }
@@ -43,10 +45,12 @@ public class EnhanceScrollView : MonoBehaviour {
 	public bool bIsRolling;	//当前是否为滚动状态
 	
 	[SerializeField]
-	private float _value = 0;
-	public float Value{
+	private int _value = 0;
+	public int Value{
 		get{return _value;}
 		set{
+			
+			if(bIsRolling) return;
 			
 			_value = value < 0 ? i_ItemCount + value : value;
 			_value = _value % i_ItemCount;
@@ -56,6 +60,8 @@ public class EnhanceScrollView : MonoBehaviour {
 		}
 	}
 
+	private TurnCallBack onClick;
+	public UnityEvent change;
 
 	//自动翻动指定的矢量值的页数
 	//在自动翻到指定的页数后，调用该Item按钮的时间
@@ -178,8 +184,12 @@ public class EnhanceScrollView : MonoBehaviour {
 
 		if(f_process != lastProcess){
 			bIsRolling = true;
-			_value = ((1 - (f_process - f_proMin) / 2f) * i_ItemCount) % i_ItemCount;
+			_value = Mathf.RoundToInt((1 - (f_process - f_proMin) / 2f) * i_ItemCount) % i_ItemCount;
 			SetPositions(a_itemDrag);
+
+			if(change != null){
+				change.Invoke();
+			}
 		}
 
 		lastProcess = f_process;
