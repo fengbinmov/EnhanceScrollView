@@ -44,6 +44,10 @@ Item宽度显示Item之间的间隔大小显示
 
 ![提示](src/提示.gif)
 
+Item之间的排列方向,可选择 ‘水平’ 或 ‘垂直，默认我水平排列’
+
+![排序方向](src/排列方向.gif)
+
 Inspector界面，可在编辑状态中实时改动与预览
 
 ![Inspector界面](src/Inspector界面.jpg)

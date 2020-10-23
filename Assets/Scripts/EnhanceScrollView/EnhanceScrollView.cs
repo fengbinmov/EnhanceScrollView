@@ -1,10 +1,11 @@
-﻿/*迭代版本：7.4
+﻿/*迭代版本：7.5
 	开发者:彬 
 	脚本解释：卷轴控件的核心控制器，
 	通过XOff调整 a_itemDrag 的位置;
 	通过YOff 调整 a_itemDrag在Y轴上的偏移;
 	通过XYOff 调整 a_itemDrag在x&y轴上的缩放大小;
 	通过autoDir调整 a_itemDrag 在整体卷轴中的内容进度，以内容步进的形式控制内容进度
+	通过horizontal调整 a_itemDrag 的排列方向，‘向右’ 或 ‘向上’
 */
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -13,7 +14,10 @@ using UnityEngine;
 
 public class EnhanceScrollView : MonoBehaviour {
 
-	public Transform context;
+	public RectTransform context;
+	[SerializeField]
+	private bool _horizontal = true;
+	public bool horizontal { get { return _horizontal; } set { _horizontal = value; SetPositions(a_itemDrag); } }
 	public AnimationCurve positionXOff;
 	public AnimationCurve positionYOff;
 	public AnimationCurve localScaleXYVaule;
@@ -73,7 +77,6 @@ public class EnhanceScrollView : MonoBehaviour {
 		onClick = action;
 	}
 
-	//
 	public void ToAddProcess(float valueT)
 	{
 		if (!b_Active) return;
@@ -102,6 +105,11 @@ public class EnhanceScrollView : MonoBehaviour {
 		{
 			f_targetProcess = targetV;
 		}
+	}
+
+	public void ChangeDirection() {
+
+		horizontal = !horizontal;
 	}
 
 	void Awake () {
@@ -142,15 +150,7 @@ public class EnhanceScrollView : MonoBehaviour {
 				NextLeftItem();
 			}
 		}
-		else{
-			
-			bIsRolling = false;
-			if (onClick != null) {
-				TurnCallBack t = onClick;
-				onClick = null;
-				t();
-			}
-		}
+		
 		if (f_process != f_targetProcess)
 		{
 			float speedT = Time.deltaTime * f_Rollspeed;
@@ -180,6 +180,14 @@ public class EnhanceScrollView : MonoBehaviour {
 				f_process = f_proMax;
 				f_targetProcess = f_proMax;
 			}
+		}else{
+
+			bIsRolling = false;
+			if (onClick != null) {
+				TurnCallBack t = onClick;
+				onClick = null;
+				t();
+			}
 		}
 
 		if(f_process != lastProcess){
@@ -206,9 +214,12 @@ public class EnhanceScrollView : MonoBehaviour {
 			posXT = (PosX + f_process + 1f) % 2f - 1f;
 			localsXT = localScaleXYVaule.Evaluate(posXT);
 
-			a_itemDragT[i].SetStatus(posXT,
-			new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), positionYOff.Evaluate(posXT)),
-			new Vector2(localsXT, localsXT));
+
+			Vector2 anchored = new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), contextWidth * positionYOff.Evaluate(posXT));
+			if (!horizontal) {
+				anchored = new Vector2(contextWidth * (1 - positionXOff.Evaluate(posXT)), contextWidth * posXT * (1 - positionYOff.Evaluate(posXT)));
+			}
+			a_itemDragT[i].SetStatus(posXT, anchored, new Vector2(localsXT, localsXT));
 		}
 	}
 
@@ -251,13 +262,12 @@ public class EnhanceScrollView : MonoBehaviour {
 		{
 			f_targetProcess = f_process = f_proMax;
 		}
-
 		f_targetProcess -= f_proMin * 2f;
 	}
 
-	#if UNITY_EDITOR
-	
-    private void OnValidate() {
+#if UNITY_EDITOR
+
+	private void OnValidate() {
 
 		if(UnityEditor.EditorApplication.isPlaying) return;
 
@@ -277,7 +287,7 @@ public class EnhanceScrollView : MonoBehaviour {
 		lastProcess = f_targetProcess = f_process = f_proMin + _value * f_proMin * 2;
 
         SetPositions(a_itemDragT);
-    }
+	}
 
 	private void OnDrawGizmos() {
 
@@ -289,26 +299,38 @@ public class EnhanceScrollView : MonoBehaviour {
 			a_itemDragT[i] = context.GetChild(i).GetComponent<ItemDrag>();
 		}
 		Gizmos.color = Color.blue;
-		for (int i = 0; i < i_ItemCount; i++)
-		{
-			Gizmos.DrawWireSphere(a_itemDragT[i].transform.position,10);
 
-			Vector3 l = a_itemDragT[i].transform.position + new Vector3(f_ItemWidth/2f,0,0);
-			Vector3 r = a_itemDragT[i].transform.position + new Vector3(f_ItemWidth/2f + f_ItemSpace,0,0);
-			Gizmos.DrawLine(l,r);
-		}
-		
-		Gizmos.color = Color.red;
+
+		float contextWidth = (f_ItemWidth + f_ItemSpace) * i_ItemCount / 2f;
+		float PosX;
+		float posXT;
+		float localsXT;
 		for (int i = 0; i < i_ItemCount; i++)
 		{
-			Gizmos.DrawWireCube( a_itemDragT[i].transform.position,new Vector3(f_ItemWidth,f_ItemWidth,0));
+			PosX = ((float)i / (i_ItemCount)) * 2f - 1f;
+			posXT = (PosX + f_process + 1f) % 2f - 1f;
+			localsXT = localScaleXYVaule.Evaluate(posXT) * f_ItemWidth;
+
+			Vector2 anchored = new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), contextWidth * positionYOff.Evaluate(posXT));
+			if (!horizontal)
+			{
+				anchored = new Vector2(contextWidth * (1 - positionXOff.Evaluate(posXT)), contextWidth * posXT * (1- positionYOff.Evaluate(posXT)));
+			}
+			Gizmos.DrawWireCube(context.TransformPoint(anchored), new Vector3(localsXT, localsXT, 0));
 		}
-		if(i_ItemCount % 2 == 0)
-			Gizmos.DrawWireSphere(context.transform.position - new Vector3((f_ItemWidth + f_ItemSpace)/2,0,0),f_ItemWidth/2);
-		else
-			Gizmos.DrawWireSphere(context.transform.position,f_ItemWidth/2);
+
+		PosX = ((float)(i_ItemCount/2-(i_ItemCount%2 == 0 ? 1 :0)) / i_ItemCount) * 2f - 1f;
+		posXT = (PosX + f_ProMin + 1f) % 2f - 1f;
+		Vector2 anchored2 = new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), contextWidth * positionYOff.Evaluate(posXT));
+		if (!horizontal)
+		{
+			anchored2 = new Vector2(contextWidth * (1 - positionXOff.Evaluate(posXT)), contextWidth * posXT * (1 - positionYOff.Evaluate(posXT)));
+		}
+		Gizmos.color = Color.yellow;
+		Vector3 size = new Vector3(f_ItemWidth / (horizontal ? 1 : 0.2f), f_ItemWidth / (horizontal ? 0.2f : 1f), 0);
+		Gizmos.DrawWireCube(context.TransformPoint(anchored2), size);
 	}
-	#endif
+#endif
 
 	//Test Event
 	public void OnClick(int i){

@@ -67,21 +67,28 @@ public class ItemDrag : Button
         }
     }
 
-    private Vector2 v2_StartPosition;
-    private Vector2 v2_EndPosition;
+    //private Vector2 v2_StartPosition;
+    //private Vector2 v2_EndPosition;
+
+    private float v1_StartPosition;
+    private float v1_EndPosition;
+
     private bool b_CanClick = true;
 
 
     private void OnDraging()
     {
-        v2_StartPosition = Input.mousePosition;
+        //v2_StartPosition = Input.mousePosition;
+        v1_StartPosition = scrollView.horizontal ? Input.mousePosition.x : Input.mousePosition.y;
+        float maxSize = scrollView.horizontal ? Screen.width : Screen.height;
 
-        if(v2_StartPosition.x > Screen.width)
-            v2_StartPosition.x = Screen.width;
-        if(v2_StartPosition.x < 0)
-            v2_StartPosition.x = 0;
-        float processAdd = (v2_StartPosition.x - v2_EndPosition.x) * scrollView.f_Dragspeed / (scrollView.f_ItemWidth + scrollView.f_ItemSpace) * scrollView.f_ProMin * 2f;
-        float dis = Mathf.Abs((v2_StartPosition.x - v2_EndPosition.x));
+
+        if (v1_StartPosition > maxSize)
+            v1_StartPosition = maxSize;
+        if(v1_StartPosition < 0)
+            v1_StartPosition = 0;
+        float processAdd = (v1_StartPosition - v1_EndPosition) * scrollView.f_Dragspeed / (scrollView.f_ItemWidth + scrollView.f_ItemSpace) * scrollView.f_ProMin * 2f;
+        float dis = Mathf.Abs((v1_StartPosition - v1_EndPosition));
 
         if (dis >= scrollView.f_ProMax && b_CanClick) {
             b_CanClick = false;
@@ -89,7 +96,7 @@ public class ItemDrag : Button
         if(!b_CanClick)
             scrollView.ToAddProcess(processAdd);
 
-        v2_EndPosition = v2_StartPosition;
+        v1_EndPosition = v1_StartPosition;
     }
 
     public override void OnPointerUp(PointerEventData eventData)
@@ -105,7 +112,7 @@ public class ItemDrag : Button
     {
         base.OnPointerDown(eventData);
         b_CanClick = true;
-        v2_EndPosition = v2_StartPosition = Input.mousePosition;
+        v1_EndPosition = v1_StartPosition = scrollView.horizontal ? Input.mousePosition.x : Input.mousePosition.y;
         InvokeRepeating("OnDraging", 0, Time.deltaTime);
     }
 	
