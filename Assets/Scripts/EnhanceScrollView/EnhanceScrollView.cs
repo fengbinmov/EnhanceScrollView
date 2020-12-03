@@ -1,4 +1,4 @@
-﻿/*迭代版本：7.5
+﻿/*迭代版本：7.7
 	开发者:彬 
 	脚本解释：卷轴控件的核心控制器，
 	通过XOff调整 a_itemDrag 的位置;
@@ -12,7 +12,8 @@ using UnityEngine.EventSystems;
 
 using UnityEngine;
 
-public class EnhanceScrollView : MonoBehaviour {
+public class EnhanceScrollView : MonoBehaviour
+{
 
 	public RectTransform context;
 	[SerializeField]
@@ -23,9 +24,9 @@ public class EnhanceScrollView : MonoBehaviour {
 	public AnimationCurve localScaleXYVaule;
 	public bool b_Active = true;
 	public bool b_ToIndex = true;
-	public bool b_CanGetTo{get{return b_Active && !bIsRolling;}}
+	public bool b_CanGetTo { get { return b_Active && !bIsRolling; } }
 
-	private ItemDrag[] a_itemDrag = new ItemDrag[]{};
+	private ItemDrag[] a_itemDrag = new ItemDrag[] { };
 	public bool b_IsDoubCount { get { return a_itemDrag.Length % 2 == 0; } }
 	private int i_ItemCount = 0;
 	public float f_ItemWidth = 100;
@@ -33,7 +34,7 @@ public class EnhanceScrollView : MonoBehaviour {
 
 	private float f_process = 0f;//pri
 	private float f_targetProcess;//pri
-	private float f_proMin,f_proMax;
+	private float f_proMin, f_proMax;
 
 	public delegate void TurnCallBack();
 	public delegate void ChangeCallBack(float v);
@@ -44,23 +45,37 @@ public class EnhanceScrollView : MonoBehaviour {
 	public float f_Rollspeed = 1;
 	public float f_Dragspeed = 1;
 
-	private int iOffDir = 0;	//卷轴偏移方向（将自动归零，回归平衡状态)
+	public int iOffDir = 0; //卷轴偏移方向（将自动归零，回归平衡状态)
+	public int iOffDirLast = 0;
 
-	public bool bIsRolling;	//当前是否为滚动状态
-	
+	public bool bIsRolling; //当前是否为滚动状态
+
 	[SerializeField]
 	private int _value = 0;
-	public int Value{
-		get{return _value;}
-		set{
-			
-			if(bIsRolling) return;
-			
+	public int Value
+	{
+		get { return _value; }
+		set
+		{
+
+			if (bIsRolling) return;
+
 			_value = value < 0 ? i_ItemCount + value : value;
 			_value = _value % i_ItemCount;
 
 			lastProcess = f_targetProcess = f_process = f_proMin + _value * f_proMin * 2;
 			SetPositions(a_itemDrag);
+		}
+	}
+	public int Value_Index
+	{
+		get
+		{
+			int half = i_ItemCount / 2 - (b_IsDoubCount ? 1 : 0);
+			int v = _value + half;
+			v = v < 0 ? i_ItemCount + v : v;
+			v = v % i_ItemCount;
+			return v;
 		}
 	}
 
@@ -69,7 +84,8 @@ public class EnhanceScrollView : MonoBehaviour {
 
 	//自动翻动指定的矢量值的页数
 	//在自动翻到指定的页数后，调用该Item按钮的时间
-	public void AutoToPageTurn(int _turnDirection, TurnCallBack action = null) {
+	public void AutoToPageTurn(int _turnDirection, TurnCallBack action = null)
+	{
 
 		if (!b_Active) return;
 
@@ -82,14 +98,15 @@ public class EnhanceScrollView : MonoBehaviour {
 		if (!b_Active) return;
 
 		f_targetProcess += valueT;
-		
+
 		if (f_targetProcess > f_proMax * 2)
 		{
 			f_targetProcess = f_targetProcess - f_proMax + f_proMin;
 		}
 	}
 
-	public void BackNormal() {
+	public void BackNormal()
+	{
 
 		if (!b_Active) return;
 
@@ -107,20 +124,23 @@ public class EnhanceScrollView : MonoBehaviour {
 		}
 	}
 
-	public void ChangeDirection() {
+	public void ChangeDirection()
+	{
 
 		horizontal = !horizontal;
 	}
 
-	void Awake () {
+	void Awake()
+	{
 
 		InitData();
 	}
 
 	void LateUpdate()
-	{		
+	{
 
-		if (!bIsRolling) {
+		if (!bIsRolling)
+		{
 
 			if (Input.GetKey(KeyCode.LeftArrow))
 			{
@@ -131,12 +151,13 @@ public class EnhanceScrollView : MonoBehaviour {
 				iOffDir = 1;
 			}
 		}
-		if(b_Active) UpdatePosition();
+		if (b_Active) UpdatePosition();
 	}
 
 	float lastProcess;
-	void UpdatePosition() {
-		
+	void UpdatePosition()
+	{
+
 		if (iOffDir != 0)
 		{
 			if (iOffDir > 0)
@@ -150,7 +171,7 @@ public class EnhanceScrollView : MonoBehaviour {
 				NextLeftItem();
 			}
 		}
-		
+
 		if (f_process != f_targetProcess)
 		{
 			float speedT = Time.deltaTime * f_Rollspeed;
@@ -169,7 +190,7 @@ public class EnhanceScrollView : MonoBehaviour {
 				else
 					f_process = f_targetProcess;
 			}
-			
+
 			if (f_process > f_proMax)
 			{
 				f_process = f_proMin;
@@ -180,22 +201,27 @@ public class EnhanceScrollView : MonoBehaviour {
 				f_process = f_proMax;
 				f_targetProcess = f_proMax;
 			}
-		}else{
+		}
+		else
+		{
 
 			bIsRolling = false;
-			if (onClick != null) {
+			if (onClick != null)
+			{
 				TurnCallBack t = onClick;
 				onClick = null;
 				t();
 			}
 		}
 
-		if(f_process != lastProcess){
+		if (f_process != lastProcess)
+		{
 			bIsRolling = true;
 			_value = Mathf.RoundToInt((1 - (f_process - f_proMin) / 2f) * i_ItemCount) % i_ItemCount;
 			SetPositions(a_itemDrag);
 
-			if(change != null){
+			if (change != null)
+			{
 				change.Invoke();
 			}
 		}
@@ -203,9 +229,10 @@ public class EnhanceScrollView : MonoBehaviour {
 		lastProcess = f_process;
 	}
 
-	void SetPositions(ItemDrag[] a_itemDragT){
+	void SetPositions(ItemDrag[] a_itemDragT)
+	{
 
-		float contextWidth = (f_ItemWidth + f_ItemSpace) * i_ItemCount/2f;
+		float contextWidth = (f_ItemWidth + f_ItemSpace) * i_ItemCount / 2f;
 		float posXT;
 		float localsXT;
 		for (int i = 0; i < i_ItemCount; i++)
@@ -216,14 +243,16 @@ public class EnhanceScrollView : MonoBehaviour {
 
 
 			Vector2 anchored = new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), contextWidth * positionYOff.Evaluate(posXT));
-			if (!horizontal) {
+			if (!horizontal)
+			{
 				anchored = new Vector2(contextWidth * (1 - positionXOff.Evaluate(posXT)), contextWidth * posXT * (1 - positionYOff.Evaluate(posXT)));
 			}
 			a_itemDragT[i].SetStatus(posXT, anchored, new Vector2(localsXT, localsXT));
 		}
 	}
 
-	public void InitData() {
+	public void InitData()
+	{
 
 		i_ItemCount = context.childCount;
 		a_itemDrag = new ItemDrag[i_ItemCount];
@@ -237,43 +266,69 @@ public class EnhanceScrollView : MonoBehaviour {
 
 		f_proMin = 1f / i_ItemCount;
 		f_proMax = 2 + f_proMin;
-		f_targetProcess = f_process = f_proMin;
+		f_targetProcess = f_process = f_proMin + _value * f_proMin * 2;
 
 		SetPositions(a_itemDrag);
 	}
 
-	public void OnClickLeft() {
+	public void OnClickLeft()
+	{
 
-		iOffDir = -1;
+		if (!bIsRolling)
+			iOffDir = -1;
 	}
 	public void OnClickRight()
 	{
-		iOffDir = +1;
+		if (!bIsRolling)
+			iOffDir = +1;
+	}
+	public void OnClickLeft(TurnCallBack action)
+	{
+		if (!bIsRolling)
+		{
+
+			OnClickLeft();
+			onClick = action;
+		}
+	}
+	public void OnClickRight(TurnCallBack action)
+	{
+		if (!bIsRolling)
+		{
+
+			OnClickRight();
+			onClick = action;
+		}
 	}
 
-	private void NextLeftItem() {
+
+	private void NextLeftItem()
+	{
 
 		f_targetProcess += f_proMin * 2f;
 	}
 
 	private void NextRightItem()
 	{
-		if (f_targetProcess == f_proMin)
+		if (f_targetProcess - f_proMin * 2 < 0)
 		{
 			f_targetProcess = f_process = f_proMax;
 		}
-		f_targetProcess -= f_proMin * 2f;
+		f_targetProcess -= f_proMin * 2;
+
+		f_targetProcess = Mathf.RoundToInt(f_targetProcess * 100) / 100f;
 	}
 
 #if UNITY_EDITOR
 
-	private void OnValidate() {
+	private void OnValidate()
+	{
 
-		if(UnityEditor.EditorApplication.isPlaying) return;
+		if (UnityEditor.EditorApplication.isPlaying) return;
 
 		i_ItemCount = context.childCount;
 		ItemDrag[] a_itemDragT = new ItemDrag[i_ItemCount];
-		
+
 		for (int i = 0; i < i_ItemCount; i++)
 		{
 			a_itemDragT[i] = context.GetChild(i).GetComponent<ItemDrag>();
@@ -286,14 +341,16 @@ public class EnhanceScrollView : MonoBehaviour {
 		_value = _value % i_ItemCount;
 		lastProcess = f_targetProcess = f_process = f_proMin + _value * f_proMin * 2;
 
-        SetPositions(a_itemDragT);
+
+		SetPositions(a_itemDragT);
 	}
 
-	private void OnDrawGizmos() {
+	private void OnDrawGizmos()
+	{
 
 		i_ItemCount = context.childCount;
 		ItemDrag[] a_itemDragT = new ItemDrag[i_ItemCount];
-		
+
 		for (int i = 0; i < i_ItemCount; i++)
 		{
 			a_itemDragT[i] = context.GetChild(i).GetComponent<ItemDrag>();
@@ -314,12 +371,12 @@ public class EnhanceScrollView : MonoBehaviour {
 			Vector2 anchored = new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), contextWidth * positionYOff.Evaluate(posXT));
 			if (!horizontal)
 			{
-				anchored = new Vector2(contextWidth * (1 - positionXOff.Evaluate(posXT)), contextWidth * posXT * (1- positionYOff.Evaluate(posXT)));
+				anchored = new Vector2(contextWidth * (1 - positionXOff.Evaluate(posXT)), contextWidth * posXT * (1 - positionYOff.Evaluate(posXT)));
 			}
 			Gizmos.DrawWireCube(context.TransformPoint(anchored), new Vector3(localsXT, localsXT, 0));
 		}
 
-		PosX = ((float)(i_ItemCount/2-(i_ItemCount%2 == 0 ? 1 :0)) / i_ItemCount) * 2f - 1f;
+		PosX = ((float)(i_ItemCount / 2 - (i_ItemCount % 2 == 0 ? 1 : 0)) / i_ItemCount) * 2f - 1f;
 		posXT = (PosX + f_ProMin + 1f) % 2f - 1f;
 		Vector2 anchored2 = new Vector2(contextWidth * posXT * positionXOff.Evaluate(posXT), contextWidth * positionYOff.Evaluate(posXT));
 		if (!horizontal)
@@ -333,8 +390,9 @@ public class EnhanceScrollView : MonoBehaviour {
 #endif
 
 	//Test Event
-	public void OnClick(int i){
-		
-        Debug.Log("OnClickItem --result["+i+"]");
+	public void OnClick(GameObject obj)
+	{
+
+		Debug.Log("OnClickItem --result[" + obj.name + "]");
 	}
 }
