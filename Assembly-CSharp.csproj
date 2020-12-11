@@ -54,6 +54,7 @@
      <Compile Include="Assets\Scripts\EnhanceScrollView\EnhanceScrollView.cs" />
      <Compile Include="Assets\Scripts\EnhanceScrollView\ItemDrag.cs" />
      <Compile Include="Assets\Scripts\EnhanceScrollView\Process.cs" />
+     <Compile Include="Assets\Scripts\GetVlaue.cs" />
  <Reference Include="UnityEngine.CoreModule">
  <HintPath>D:/Unity_Apps/Unity_2017_4_10f1/Editor/Data/Managed/UnityEngine/UnityEngine.CoreModule.dll</HintPath>
  </Reference>

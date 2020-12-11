@@ -1,4 +1,4 @@
-﻿/*迭代版本：7.7
+﻿/*迭代版本：7.8
 	开发者:彬 
 	脚本解释：卷轴控件的核心控制器，
 	通过XOff调整 a_itemDrag 的位置;
@@ -57,7 +57,6 @@ public class EnhanceScrollView : MonoBehaviour
 		get { return _value; }
 		set
 		{
-
 			if (bIsRolling) return;
 
 			_value = value < 0 ? i_ItemCount + value : value;
@@ -67,15 +66,23 @@ public class EnhanceScrollView : MonoBehaviour
 			SetPositions(a_itemDrag);
 		}
 	}
+
 	public int Value_Index
 	{
 		get
 		{
 			int half = i_ItemCount / 2 - (b_IsDoubCount ? 1 : 0);
-			int v = _value + half;
-			v = v < 0 ? i_ItemCount + v : v;
-			v = v % i_ItemCount;
+			int v = (i_ItemCount - _value + half) % i_ItemCount;
 			return v;
+		}
+		set
+		{
+			value = value < 0 ? i_ItemCount + value : value;
+			value = value % i_ItemCount;
+
+			int half = i_ItemCount / 2 - (b_IsDoubCount ? 1 : 0);
+			int v = (i_ItemCount - value + half) % i_ItemCount;
+			Value = v;
 		}
 	}
 
@@ -217,7 +224,9 @@ public class EnhanceScrollView : MonoBehaviour
 		if (f_process != lastProcess)
 		{
 			bIsRolling = true;
-			_value = Mathf.RoundToInt((1 - (f_process - f_proMin) / 2f) * i_ItemCount) % i_ItemCount;
+
+			//_value = Mathf.RoundToInt((1 - (f_process - f_proMin) / 2f) * i_ItemCount) % i_ItemCount;
+			_value = Mathf.RoundToInt((f_process - f_proMin) / 2f / f_proMin);
 			SetPositions(a_itemDrag);
 
 			if (change != null)
@@ -347,6 +356,7 @@ public class EnhanceScrollView : MonoBehaviour
 
 	private void OnDrawGizmos()
 	{
+		if (UnityEditor.EditorApplication.isPlaying) return;
 
 		i_ItemCount = context.childCount;
 		ItemDrag[] a_itemDragT = new ItemDrag[i_ItemCount];
