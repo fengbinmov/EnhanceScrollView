@@ -13,11 +13,9 @@ public class ItemDrag : Button
         } }
     private RectTransform _rectTransf;
     private EnhanceScrollView scrollView;
-    private float f_posX;
-    public float f_processX;
-
-    public float PosX{get{return f_posX;}}
-    public float ProcessX{get{return f_processX;}set { f_processX = value; } }
+    public float f_posX { get; private set; }
+    private float f_processX;
+    private int valueT;
 
 
     public void SetData(float _f_posX, EnhanceScrollView _scrollView) {
@@ -27,7 +25,7 @@ public class ItemDrag : Button
 
     public void SetStatus(float ProcessXT,Vector2 anchoredPositionT,Vector3 localScaleT){
 
-		ProcessX = ProcessXT;
+        f_processX = ProcessXT;
 		rectTransf.anchoredPosition = anchoredPositionT;
 		rectTransf.localScale = localScaleT;
     }
@@ -35,7 +33,7 @@ public class ItemDrag : Button
 
     public override void OnPointerClick(PointerEventData eventData)
     {
-        if(!b_CanClick || !scrollView.b_CanGetTo) return;
+        if(!interactable||!b_CanClick || !scrollView.b_CanGetTo) return;
 
         if(scrollView.b_ToIndex){
             float f_value =0;
@@ -101,6 +99,8 @@ public class ItemDrag : Button
 
     public override void OnPointerUp(PointerEventData eventData)
     {
+        if (!interactable) return;
+
         base.OnPointerUp(eventData);
         CancelInvoke();
         if (!b_CanClick)
@@ -110,6 +110,8 @@ public class ItemDrag : Button
 
     public override void OnPointerDown(PointerEventData eventData)
     {
+        if (!interactable) return;
+
         base.OnPointerDown(eventData);
         b_CanClick = true;
         v1_EndPosition = v1_StartPosition = scrollView.horizontal ? Input.mousePosition.x : Input.mousePosition.y;

@@ -1,4 +1,4 @@
-﻿/*迭代版本：7.8
+﻿/*迭代版本：7.9
 	开发者:彬 
 	脚本解释：卷轴控件的核心控制器，
 	通过XOff调整 a_itemDrag 的位置;
@@ -93,7 +93,6 @@ public class EnhanceScrollView : MonoBehaviour
 	//在自动翻到指定的页数后，调用该Item按钮的时间
 	public void AutoToPageTurn(int _turnDirection, TurnCallBack action = null)
 	{
-
 		if (!b_Active) return;
 
 		iOffDir = _turnDirection;
@@ -139,7 +138,6 @@ public class EnhanceScrollView : MonoBehaviour
 
 	void Awake()
 	{
-
 		InitData();
 	}
 
@@ -165,16 +163,16 @@ public class EnhanceScrollView : MonoBehaviour
 	void UpdatePosition()
 	{
 
-		if (iOffDir != 0)
+		if (!bIsRolling && iOffDir != 0)
 		{
 			if (iOffDir > 0)
 			{
-				iOffDir -= 1;
+				--iOffDir;
 				NextRightItem();
 			}
 			else
 			{
-				iOffDir += 1;
+				++iOffDir;
 				NextLeftItem();
 			}
 		}
@@ -211,13 +209,15 @@ public class EnhanceScrollView : MonoBehaviour
 		}
 		else
 		{
-
 			bIsRolling = false;
-			if (onClick != null)
-			{
-				TurnCallBack t = onClick;
-				onClick = null;
-				t();
+			if (iOffDir == 0) {
+
+				if (onClick != null)
+				{
+					TurnCallBack t = onClick;
+					onClick = null;
+					t();
+				}
 			}
 		}
 
@@ -246,8 +246,9 @@ public class EnhanceScrollView : MonoBehaviour
 		float localsXT;
 		for (int i = 0; i < i_ItemCount; i++)
 		{
-			float PosX = ((float)i / (i_ItemCount)) * 2f - 1f;
-			posXT = (PosX + f_process + 1f) % 2f - 1f;
+			//float PosX = ((float)i / (i_ItemCount)) * 2f - 1f;
+			posXT = (a_itemDragT[i].f_posX + f_process + 1f) % 2f - 1f;
+			posXT = Mathf.RoundToInt(posXT * 100000f) / 100000f;
 			localsXT = localScaleXYVaule.Evaluate(posXT);
 
 
@@ -269,13 +270,14 @@ public class EnhanceScrollView : MonoBehaviour
 		for (int i = 0; i < i_ItemCount; i++)
 		{
 			itemDragT = context.GetChild(i).GetComponent<ItemDrag>();
-			itemDragT.SetData(((float)i / (i_ItemCount)) * 2f - 1f, this);
+			float processT = Mathf.RoundToInt((((float)i / (i_ItemCount)) * 2f - 1f) * 100000f) / 100000f;
+			itemDragT.SetData(processT, this);
 			a_itemDrag[i] = itemDragT;
 		}
 
-		f_proMin = 1f / i_ItemCount;
+		f_proMin = Normal(1f / i_ItemCount);
 		f_proMax = 2 + f_proMin;
-		f_targetProcess = f_process = f_proMin + _value * f_proMin * 2;
+		f_targetProcess = f_process = Normal(f_proMin + _value * f_proMin * 2f);
 
 		SetPositions(a_itemDrag);
 	}
@@ -319,13 +321,19 @@ public class EnhanceScrollView : MonoBehaviour
 
 	private void NextRightItem()
 	{
-		if (f_targetProcess - f_proMin * 2 < 0)
+		f_targetProcess = f_targetProcess - f_proMin * 2;
+		if (f_targetProcess <= 0)
 		{
-			f_targetProcess = f_process = f_proMax;
+			f_process = f_proMax;
+			f_targetProcess = f_process - f_proMin * 2;
 		}
-		f_targetProcess -= f_proMin * 2;
 
-		f_targetProcess = Mathf.RoundToInt(f_targetProcess * 100) / 100f;
+
+		f_targetProcess = Normal(f_targetProcess);
+	}
+
+	public float Normal(float v) {
+		return Mathf.RoundToInt(v * 100000) / 100000f;
 	}
 
 #if UNITY_EDITOR
@@ -335,29 +343,11 @@ public class EnhanceScrollView : MonoBehaviour
 
 		if (UnityEditor.EditorApplication.isPlaying) return;
 
-		i_ItemCount = context.childCount;
-		ItemDrag[] a_itemDragT = new ItemDrag[i_ItemCount];
-
-		for (int i = 0; i < i_ItemCount; i++)
-		{
-			a_itemDragT[i] = context.GetChild(i).GetComponent<ItemDrag>();
-		}
-
-		f_proMin = 1f / i_ItemCount;
-		f_proMax = 2 + f_proMin;
-
-		_value = _value < 0 ? i_ItemCount + _value : _value;
-		_value = _value % i_ItemCount;
-		lastProcess = f_targetProcess = f_process = f_proMin + _value * f_proMin * 2;
-
-
-		SetPositions(a_itemDragT);
+		InitData();
 	}
 
 	private void OnDrawGizmos()
 	{
-		if (UnityEditor.EditorApplication.isPlaying) return;
-
 		i_ItemCount = context.childCount;
 		ItemDrag[] a_itemDragT = new ItemDrag[i_ItemCount];
 
