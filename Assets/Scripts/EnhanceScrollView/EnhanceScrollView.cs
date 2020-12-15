@@ -167,14 +167,29 @@ public class EnhanceScrollView : MonoBehaviour
 		{
 			if (iOffDir > 0)
 			{
-				--iOffDir;
-				NextRightItem();
+				for (int i = 0; i < Mathf.Abs(iOffDir); i++)
+				{
+					NextRightItem();
+				}
 			}
 			else
 			{
-				++iOffDir;
-				NextLeftItem();
+				for (int i = 0; i < Mathf.Abs(iOffDir); i++)
+				{
+					NextLeftItem();
+				}
 			}
+			iOffDir = 0;
+			//if (iOffDir > 0)
+			//{
+			//	--iOffDir;
+			//	NextRightItem();
+			//}
+			//else
+			//{
+			//	++iOffDir;
+			//	NextLeftItem();
+			//}
 		}
 
 		if (f_process != f_targetProcess)
@@ -203,14 +218,15 @@ public class EnhanceScrollView : MonoBehaviour
 			}
 			if (f_process < f_proMin)
 			{
-				f_process = f_proMax;
-				f_targetProcess = f_proMax;
+				f_process = f_proMax - (f_proMin - f_process);
+				f_targetProcess = f_proMax - (f_proMin - f_targetProcess);
 			}
 		}
 		else
 		{
 			bIsRolling = false;
-			if (iOffDir == 0) {
+			if (iOffDir == 0)
+			{
 
 				if (onClick != null)
 				{
@@ -317,22 +333,23 @@ public class EnhanceScrollView : MonoBehaviour
 	{
 
 		f_targetProcess += f_proMin * 2f;
+		f_targetProcess = Normal(f_targetProcess);
 	}
 
 	private void NextRightItem()
 	{
-		f_targetProcess = f_targetProcess - f_proMin * 2;
-		if (f_targetProcess <= 0)
-		{
-			f_process = f_proMax;
-			f_targetProcess = f_process - f_proMin * 2;
-		}
-
-
+		f_targetProcess -= f_proMin * 2f;
 		f_targetProcess = Normal(f_targetProcess);
+		//if (f_targetProcess <= 0)
+		//{
+		//	f_process = f_process == f_ProMin ? f_proMax : f_process;
+		//	f_targetProcess = f_proMax - f_proMin * 2;
+		//}
+
 	}
 
-	public float Normal(float v) {
+	public float Normal(float v)
+	{
 		return Mathf.RoundToInt(v * 100000) / 100000f;
 	}
 
