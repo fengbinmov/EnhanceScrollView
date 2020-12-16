@@ -1,0 +1,15 @@
+{
+  "name": "com.unity.enhancescrollview",
+  "version": "1.3.4",
+  "displayName": "EnhanceScrollView",
+  "description": "This is an EnhanceScrollView package.\nScript version is 7.9",
+  "keywords": [
+    "EnhanceScrollView",
+    "ScrollView"
+  ],
+  "author": {
+    "name": "MOVCat",
+    "email": "fengbinmov@outlook.com",
+    "url": "https://github.com/fengbinmov/EnhanceScrollView"
+  }
+}

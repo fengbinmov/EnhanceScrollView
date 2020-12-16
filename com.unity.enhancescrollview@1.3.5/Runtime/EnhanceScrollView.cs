@@ -146,7 +146,6 @@ public class EnhanceScrollView : MonoBehaviour
 
 		if (!bIsRolling)
 		{
-
 			if (Input.GetKey(KeyCode.LeftArrow))
 			{
 				iOffDir = -1;
@@ -403,6 +402,14 @@ public class EnhanceScrollView : MonoBehaviour
 		Gizmos.color = Color.yellow;
 		Vector3 size = new Vector3(f_ItemWidth / (horizontal ? 1 : 0.2f), f_ItemWidth / (horizontal ? 0.2f : 1f), 0);
 		Gizmos.DrawWireCube(context.TransformPoint(anchored2), size);
+	}
+
+	private void ComponentCurveDataInit() {
+
+
+		positionXOff = new AnimationCurve(new Keyframe[] { new Keyframe(-1, 1), new Keyframe(0, 1), new Keyframe(1, 1) });
+		positionYOff = new AnimationCurve(new Keyframe[] { new Keyframe(-1, 0), new Keyframe(0, 0), new Keyframe(1, 0) });
+		localScaleXYVaule = new AnimationCurve(new Keyframe[] { new Keyframe(-1, 1), new Keyframe(0, 1), new Keyframe(1, 1) });
 	}
 #endif
 
